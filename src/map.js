@@ -1,0 +1,102 @@
+/* eslint-disable max-classes-per-file */
+import { Map as RotMap } from "rot-js";
+import { random } from "./util";
+import { spriteSheet } from "./globals";
+
+class Tile {
+  constructor({ isWalkable, sprite }) {
+    this.isWalkable = isWalkable;
+    this.sprite = sprite;
+    this.entity = null;
+  }
+
+  isEmpty() {
+    return Boolean(!this.entity);
+  }
+}
+
+class Map {
+  constructor({ gridSize, tileSize }) {
+    this.gridSize = gridSize;
+    this.tileSize = tileSize;
+    this.spriteSheet = spriteSheet;
+    this.map = [];
+
+    const localMap = new RotMap.Cellular(gridSize, gridSize, {
+      born: [4, 5],
+      survive: [2, 3, 4, 5],
+      connected: true,
+    });
+    localMap.randomize(0.4);
+    localMap.create();
+    localMap.create();
+    localMap.connect(this.createMapCallback.bind(this));
+  }
+
+  createMapCallback(x, y, z) {
+    const wallSprite = this.spriteSheet.getSprite(2, 0);
+    const wallTile = new Tile({ isWalkable: false, sprite: wallSprite });
+
+    const floorSprite = this.spriteSheet.getSprite(1, 0);
+    const floorTile = new Tile({ isWalkable: true, sprite: floorSprite });
+    if (!this.map[x]) {
+      this.map[x] = [];
+    }
+    if (z) {
+      this.map[x][y] = wallTile;
+    } else {
+      this.map[x][y] = floorTile;
+    }
+  }
+
+  getTileFromCanvasCoords(x, y) {
+    const tileX = Math.ceil(x / this.tileSize);
+    const tileY = Math.ceil(y / this.tileSize);
+    return this.map[tileX][tileY];
+  }
+
+  getMapCoordsFromCanvasCoords(x, y) {
+    const tileX = Math.ceil(x / this.tileSize);
+    const tileY = Math.ceil(y / this.tileSize);
+    return { x: tileX, y: tileY };
+  }
+
+  isInBounds(x, y) {
+    return x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize;
+  }
+
+  isPassable(x, y) {
+    const isPassable =
+      this.isInBounds(x, y) &&
+      this.map &&
+      this.map[x] &&
+      this.map[x][y] &&
+      this.map[x][y].isWalkable;
+
+    return isPassable;
+  }
+
+  draw() {
+    this.map.forEach((col, x) => {
+      col.forEach((tile, y) => {
+        tile.sprite.draw(
+          x * this.tileSize,
+          y * this.tileSize,
+          this.tileSize,
+          this.tileSize
+        );
+      });
+    });
+  }
+
+  randomEmptyTile() {
+    const x = random(0, this.gridSize);
+    const y = random(0, this.gridSize);
+    if (this.map[x][y].isEmpty() && this.map[x][y].isWalkable) {
+      return { x, y };
+    }
+    return this.randomEmptyTile();
+  }
+}
+
+export { Map };
