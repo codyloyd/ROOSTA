@@ -49,15 +49,12 @@ class Entity {
           },
         })
       );
+      if (this.isRoosta) {
+        document.dispatchEvent(new CustomEvent("die", {}));
+      }
     }
     if (this.isRoosta) {
-      document.dispatchEvent(
-        new CustomEvent("screenShake", {
-          detail: {
-            sound: "pop",
-          },
-        })
-      );
+      document.dispatchEvent(new CustomEvent("screenShake", {}));
     }
   }
 
