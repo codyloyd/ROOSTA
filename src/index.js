@@ -24,6 +24,13 @@ const gameStates = machine(
   [
     state("menu", {
       start: (detail, context) => {
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "background",
+            },
+          })
+        );
         return {
           state: "fadeIn",
           context: { ...context, ...{ faderOpacity: 1 } },

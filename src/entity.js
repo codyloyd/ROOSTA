@@ -10,6 +10,7 @@ import {
   snakeSprite,
   waspSprite,
   starSprite,
+  ouchDuckSprite,
 } from "./globals";
 
 class Entity {
@@ -53,7 +54,23 @@ class Entity {
         document.dispatchEvent(new CustomEvent("die", {}));
       }
     }
+    if (this.duck && this.hp > 0) {
+      document.dispatchEvent(
+        new CustomEvent("sound", {
+          detail: {
+            sound: "quack",
+          },
+        })
+      );
+    }
     if (this.isRoosta) {
+      document.dispatchEvent(
+        new CustomEvent("sound", {
+          detail: {
+            sound: "cluck",
+          },
+        })
+      );
       document.dispatchEvent(new CustomEvent("screenShake", {}));
     }
   }
@@ -69,7 +86,7 @@ class Entity {
     const newY = this.y + this.tileSize * dy;
     const newTile = this.map.getTileFromCanvasCoords(newX, newY);
     const oldTile = this.map.getTileFromCanvasCoords(this.x, this.y);
-    if (newTile.isWalkable && newTile.isEmpty()) {
+    if (newTile.isEmpty()) {
       this.displayX = this.x;
       this.displayY = this.y;
       this.x = newX;
@@ -94,14 +111,6 @@ class Entity {
   draw() {
     const { displayX, displayY, tileSize } = this;
     this.sprite.draw(displayX, displayY, tileSize, tileSize);
-    for (let i = 0; i < this.hp; i++) {
-      healthSprite.draw(
-        8 + displayX + 24 * i,
-        displayY + 64,
-        tileSize,
-        tileSize
-      );
-    }
   }
 
   keydown() {}
@@ -155,6 +164,19 @@ class Roosta extends Entity {
       this.move(0, 1);
     }
   }
+
+  draw() {
+    super.draw();
+    const { displayX, displayY, tileSize } = this;
+    for (let i = 0; i < this.hp; i++) {
+      healthSprite.draw(
+        8 + displayX + 24 * i,
+        displayY + 64,
+        tileSize,
+        tileSize
+      );
+    }
+  }
 }
 
 class Monster extends Entity {
@@ -182,11 +204,35 @@ class Crab extends Monster {
     super(opts);
     this.sprite = crabSprite;
   }
+
+  takeTurn(roosta) {
+    if (this.dead) return;
+    const RoostaPos = this.map.getMapCoordsFromCanvasCoords(roosta.x, roosta.y);
+    const astar = new Path.AStar(RoostaPos.x, RoostaPos.y, () => true, {
+      topology: 4,
+    });
+    const gridPos = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
+    const coords = [];
+    astar.compute(gridPos.x, gridPos.y, (x, y) => coords.push({ x, y }));
+    const dx = coords[1].x - gridPos.x;
+    const dy = coords[1].y - gridPos.y;
+    this.move(dx, dy);
+  }
 }
 class Duck extends Monster {
+  // hass 2hp
   constructor(opts) {
     super(opts);
     this.sprite = Math.random() < 0.8 ? duckSprite : coolDuckSprite;
+    this.hp = 2;
+    this.duck = true;
+  }
+
+  update(dt) {
+    super.update(dt);
+    if (this.hp == 1) {
+      this.sprite = ouchDuckSprite;
+    }
   }
 }
 class Snake extends Monster {
@@ -201,12 +247,27 @@ class Wasp extends Monster {
     super(opts);
     this.sprite = waspSprite;
   }
+
+  takeTurn(roosta) {
+    super.takeTurn(roosta);
+    super.takeTurn(roosta);
+  }
 }
 class Star extends Monster {
   // is slow
   constructor(opts) {
     super(opts);
     this.sprite = starSprite;
+    this.stunned = false;
+  }
+
+  takeTurn(roosta) {
+    if (this.stunned) {
+      this.stunned = !this.stunned;
+      return;
+    }
+    super.takeTurn(roosta);
+    this.stunned = true;
   }
 }
 

@@ -22,6 +22,7 @@ const snakeSprite = spriteSheet.getSprite(6, 0);
 const waspSprite = spriteSheet.getSprite(7, 0);
 const starSprite = spriteSheet.getSprite(8, 0);
 const coolDuckSprite = spriteSheet.getSprite(9, 0);
+const ouchDuckSprite = spriteSheet.getSprite(10, 0);
 
 export {
   game,
@@ -36,4 +37,5 @@ export {
   waspSprite,
   starSprite,
   coolDuckSprite,
+  ouchDuckSprite,
 };
