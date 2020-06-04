@@ -6,6 +6,10 @@ const game = new Game({
   parent: "game",
 });
 
+const gridSize = 7;
+const tileSize = game.width / gridSize;
+const pixelSize = tileSize / 32;
+
 const spriteSheet = new SpriteSheet({
   path: "/img/spritesheet.png",
   context: game.context,
@@ -27,6 +31,9 @@ const ouchDuckSprite = spriteSheet.getSprite(10, 0);
 
 export {
   game,
+  gridSize,
+  tileSize,
+  pixelSize,
   spriteSheet,
   roostaSprite,
   floorSprite,

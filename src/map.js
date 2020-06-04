@@ -1,17 +1,42 @@
 /* eslint-disable max-classes-per-file */
 import { Map as RotMap } from "rot-js";
 import { random } from "./util";
-import { spriteSheet } from "./globals";
+import { spriteSheet, tileSize, game } from "./globals";
+
+const hitallTrapSprite = spriteSheet.getSprite(12, 0);
+const damageTrapSprite = spriteSheet.getSprite(13, 0);
 
 class Tile {
   constructor({ isWalkable, sprite }) {
     this.isWalkable = isWalkable;
     this.sprite = sprite;
     this.entity = null;
+    this.trap = null;
+    this.trapCallback = null;
+  }
+
+  triggerTrap() {
+    if (this.trapCallback) {
+      this.trapCallback();
+      this.trap = null;
+      this.trapCallback = null;
+    }
   }
 
   isEmpty() {
     return !this.entity;
+  }
+
+  draw(x, y) {
+    this.sprite.draw(x * tileSize, y * tileSize, tileSize, tileSize);
+    if (this.trap) {
+      if (this.trap === "damage") {
+        damageTrapSprite.draw(x * tileSize, y * tileSize, tileSize, tileSize);
+      }
+      if (this.trap === "hitAll") {
+        hitallTrapSprite.draw(x * tileSize, y * tileSize, tileSize, tileSize);
+      }
+    }
   }
 }
 
@@ -88,12 +113,7 @@ class Map {
   draw() {
     this.map.forEach((col, x) => {
       col.forEach((tile, y) => {
-        tile.sprite.draw(
-          x * this.tileSize,
-          y * this.tileSize,
-          this.tileSize,
-          this.tileSize
-        );
+        tile.draw(x, y);
       });
     });
   }

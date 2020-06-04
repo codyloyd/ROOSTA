@@ -3,8 +3,8 @@ import { game } from "./globals";
 
 const SpellsMixin = (superclass) =>
   class extends superclass {
+    // transport to random tile
     jump() {
-      // transport to random tile
       const newTileCoords = this.map.randomEmptyTile();
       const oldTile = this.map.getTileFromCanvasCoords(this.x, this.y);
       this.map.getTile(newTileCoords.x, newTileCoords.y).entity = this;
@@ -13,8 +13,8 @@ const SpellsMixin = (superclass) =>
       this.y = newTileCoords.y * this.tileSize;
     }
 
+    // transport all monsters
     hurricane() {
-      // transport all monsters
       game.enemies.forEach((e) => {
         const newTileCoords = this.map.randomEmptyTile();
         const oldTile = this.map.getTileFromCanvasCoords(e.x, e.y);
@@ -29,8 +29,8 @@ const SpellsMixin = (superclass) =>
       this.hp = Math.min(this.hp + 1, this.maxHp);
     }
 
+    // damage all in column
     col() {
-      // damage all in column
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map[mapCoords.x].forEach((tile) => {
         if (tile.entity && !tile.entity.isRoosta) {
@@ -39,8 +39,8 @@ const SpellsMixin = (superclass) =>
       });
     }
 
+    // damage all in row
     row() {
-      // damage all in row
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map.forEach((col) => {
         const tile = col[mapCoords.y];
@@ -50,8 +50,8 @@ const SpellsMixin = (superclass) =>
       });
     }
 
+    // push monsters back
     push() {
-      // push monsters back
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map.forEach((col) =>
         col.forEach((tile) => {
@@ -82,8 +82,8 @@ const SpellsMixin = (superclass) =>
       game.enemies.forEach((e) => (e.hasBeenPushed = false));
     }
 
+    // pull monsters close
     pull() {
-      // pull monsters close
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map.forEach((col) =>
         col.forEach((tile) => {
@@ -114,8 +114,8 @@ const SpellsMixin = (superclass) =>
       game.enemies.forEach((e) => (e.hasBeenPushed = false));
     }
 
+    // stuns all monsters
     stun() {
-      // stuns all monsters
       game.enemies.forEach((e) => (e.stunned = true));
     }
 
@@ -129,8 +129,8 @@ const SpellsMixin = (superclass) =>
       );
     }
 
+    // throw ball in some direction
     beachBall() {
-      // throw ball in some direction
       this.dispatchDirectionFunction((key) => {
         const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
         const mapLength = this.map.map.length;
@@ -177,8 +177,8 @@ const SpellsMixin = (superclass) =>
       });
     }
 
+    // dash in some direction (and cause damage)
     dash() {
-      // dash in some direction (and cause damage)
       this.dispatchDirectionFunction((key) => {
         const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
         const mapLength = this.map.map.length;
@@ -188,45 +188,72 @@ const SpellsMixin = (superclass) =>
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
                 tile.entity.takeDamage();
-                this.x = (x - 1) * this.tileSize;
                 this.speed = 30;
+                this.moveTo(x - 1, mapCoords.y);
                 return true;
               }
               if (!this.map.isPassable(x, mapCoords.y)) {
-                this.x = (x - 1) * this.tileSize;
+                this.moveTo(x - 1, mapCoords.y);
                 this.speed = 30;
                 return true;
               }
             }
             this.speed = 30;
-            this.x = (mapLength - 1) * this.tileSize;
+            this.moveTo(mapLength - 1, mapCoords.y);
           }
           if (key === "ArrowLeft") {
             for (let x = mapCoords.x - 1; x >= 0; x--) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
                 tile.entity.takeDamage();
+                this.speed = 30;
+                this.moveTo(x + 1, mapCoords.y);
+                return true;
+              }
+              if (!this.map.isPassable(x, mapCoords.y)) {
+                this.moveTo(x + 1, mapCoords.y);
+                this.speed = 30;
                 return true;
               }
             }
+            this.speed = 30;
+            this.moveTo(0, mapCoords.y);
           }
           if (key === "ArrowUp") {
             for (let y = mapCoords.y - 1; y >= 0; y--) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
                 tile.entity.takeDamage();
+                this.speed = 30;
+                this.moveTo(mapCoords.x, y + 1);
+                return true;
+              }
+              if (!this.map.isPassable(mapCoords.x, y)) {
+                this.speed = 30;
+                this.moveTo(mapCoords.x, y + 1);
                 return true;
               }
             }
+            this.speed = 30;
+            this.moveTo(mapCoords.x, 0);
           }
           if (key === "ArrowDown") {
             for (let y = mapCoords.y + 1; y < mapLength; y++) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
                 tile.entity.takeDamage();
+                this.speed = 30;
+                this.moveTo(mapCoords.x, y - 1);
+                return true;
+              }
+              if (!this.map.isPassable(mapCoords.x, y)) {
+                this.speed = 30;
+                this.moveTo(mapCoords.x, y - 1);
                 return true;
               }
             }
+            this.speed = 30;
+            this.moveTo(mapCoords.x, mapLength - 1);
           }
           return true;
         }
@@ -234,20 +261,78 @@ const SpellsMixin = (superclass) =>
       });
     }
 
+    // set trap in some direction
     damageTrap() {
-      // set trap in some direction
+      this.dispatchDirectionFunction((key) => {
+        const damageTrapFunction = function () {
+          this.entity.takeDamage();
+        };
+        const { x, y } = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
+        if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
+          if (key === "ArrowRight") {
+            const tile = this.map.getTile(x + 1, y);
+            tile.trap = "damage";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowLeft") {
+            const tile = this.map.getTile(x - 1, y);
+            tile.trap = "damage";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowUp") {
+            const tile = this.map.getTile(x, y - 1);
+            tile.trap = "damage";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowDown") {
+            const tile = this.map.getTile(x, y + 1);
+            tile.trap = "damage";
+            tile.trapCallback = damageTrapFunction;
+          }
+          return true;
+        }
+        return false;
+      });
     }
 
-    confuseTrap() {
-      // set confuse trap
+    // damages all of whatever steps on it
+    hitAllTrap() {
+      this.dispatchDirectionFunction((key) => {
+        const damageTrapFunction = function () {
+          game.enemies
+            .filter((e) => e.name === this.entity.name)
+            .forEach((e) => e.takeDamage());
+        };
+        const { x, y } = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
+        if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
+          if (key === "ArrowRight") {
+            const tile = this.map.getTile(x + 1, y);
+            tile.trap = "hitAll";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowLeft") {
+            const tile = this.map.getTile(x - 1, y);
+            tile.trap = "hitAll";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowUp") {
+            const tile = this.map.getTile(x, y - 1);
+            tile.trap = "hitAll";
+            tile.trapCallback = damageTrapFunction;
+          }
+          if (key === "ArrowDown") {
+            const tile = this.map.getTile(x, y + 1);
+            tile.trap = "hitAll";
+            tile.trapCallback = damageTrapFunction;
+          }
+          return true;
+        }
+        return false;
+      });
     }
 
-    allEnemiesTrap() {
-      // damages all of whatever steps on it
-    }
-
+    // damage enemies in water
     waterAttack() {
-      // damage enemies in water
       this.map.map.forEach((col) => {
         col.forEach((tile) => {
           if (!tile.isWalkable && tile.entity) {
@@ -257,15 +342,15 @@ const SpellsMixin = (superclass) =>
       });
     }
 
+    // damage wasps
     bugSpray() {
-      // damage wasps
       game.enemies
         .filter((e) => e.name === "wasp")
         .forEach((e) => e.takeDamage());
     }
 
+    // ... wait for it...
     wait() {
-      // ... wait for it...
       this.doneCallback();
     }
   };

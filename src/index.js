@@ -2,8 +2,8 @@
 /* eslint-disable func-names */
 import { machine, state } from "fn-machine";
 import { Roosta, Crab, Duck, Snake, Wasp, Star } from "./entity";
+import { game, gridSize, tileSize, pixelSize } from "./globals";
 import { Map } from "./map";
-import { game } from "./globals";
 import { randomFromArray } from "./util";
 import { Sploder } from "./particles";
 import "./sounds";
@@ -91,10 +91,6 @@ const gameStates = machine(
   onStateChange
 );
 
-const gridSize = 7;
-const tileSize = game.width / gridSize;
-const pixelSize = tileSize / 32;
-
 const sploder = new Sploder(pixelSize * 2);
 
 const map = new Map({
@@ -103,8 +99,9 @@ const map = new Map({
 });
 
 game.enemies = [];
-const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
-for (let i = 0; i < 3; i++) {
+// const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
+const enemyConstructors = [Star, Duck];
+for (let i = 0; i < 8; i++) {
   const enemy = randomFromArray(enemyConstructors);
   const position = map.randomEmptyTile();
   game.enemies.push(

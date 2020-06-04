@@ -49,6 +49,37 @@ class Entity {
     this.attackedThisTurn = false;
   }
 
+  moveTo(x, y) {
+    const newX = x * this.tileSize;
+    const newY = y * this.tileSize;
+    const coords = this.map.getMapCoordsFromCanvasCoords(newX, newY);
+    if (!this.map.isInBounds(coords.x, coords.y)) return false;
+    const newTile = this.map.getTileFromCanvasCoords(newX, newY);
+    const oldTile = this.map.getTileFromCanvasCoords(this.x, this.y);
+    if (newTile && newTile.isEmpty() && this.canWalkHere(coords.x, coords.y)) {
+      this.displayX = this.x;
+      this.displayY = this.y;
+      this.x = newX;
+      this.y = newY;
+      newTile.entity = this;
+      newTile.triggerTrap();
+      oldTile.entity = null;
+      this.moving = true;
+      return true;
+    }
+    if (newTile && !newTile.isEmpty()) {
+      const { entity } = newTile;
+      if (entity.isRoosta || this.isRoosta) {
+        this.displayX -= (this.displayX - entity.x) / 3;
+        this.displayY -= (this.displayY - entity.y) / 3;
+        entity.takeDamage();
+        this.attackedThisTurn = true;
+        return true;
+      }
+    }
+    return false;
+  }
+
   move(dx, dy, noAttack = false) {
     const newX = this.x + this.tileSize * dx;
     const newY = this.y + this.tileSize * dy;
@@ -62,6 +93,7 @@ class Entity {
       this.x = newX;
       this.y = newY;
       newTile.entity = this;
+      newTile.triggerTrap();
       oldTile.entity = null;
       this.moving = true;
       return true;
@@ -165,7 +197,7 @@ class Roosta extends SpellsMixin(Entity) {
     }
     if (key === " ") {
       // this.wait();
-      this.dash();
+      this.damageTrap();
     }
   }
 
