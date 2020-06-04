@@ -12,6 +12,7 @@ const spriteSheet = new SpriteSheet({
   colSize: 32,
   rowSize: 32,
 });
+
 const roostaSprite = spriteSheet.getSprite(0, 0);
 const floorSprite = spriteSheet.getSprite(1, 0);
 const wallSprite = spriteSheet.getSprite(2, 0);

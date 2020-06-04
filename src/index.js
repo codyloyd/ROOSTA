@@ -50,6 +50,18 @@ const gameStates = machine(
           state: "dying",
         };
       },
+      receiveDirectionFunction: () => {
+        return {
+          state: "waitingForInput",
+        };
+      },
+    }),
+    state("waitingForInput", {
+      resumePlaying: () => {
+        return {
+          state: "play",
+        };
+      },
     }),
     state("dying", {
       transitionEnd: (detail, context) => {
@@ -90,12 +102,12 @@ const map = new Map({
   tileSize,
 });
 
-let enemies = [];
+game.enemies = [];
 const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 3; i++) {
   const enemy = randomFromArray(enemyConstructors);
   const position = map.randomEmptyTile();
-  enemies.push(
+  game.enemies.push(
     new enemy({
       x: position.x * tileSize,
       y: position.y * tileSize,
@@ -108,7 +120,7 @@ for (let i = 0; i < 8; i++) {
 const gameTick = function () {
   playerLock = true;
   const enemyMovements = [];
-  enemies.forEach((e, i) => {
+  game.enemies.forEach((e, i) => {
     enemyMovements.push(
       new Promise((res) => {
         setTimeout(() => {
@@ -145,12 +157,24 @@ document.addEventListener("screenShake", ({ detail }) => {
   shakeAmount = 10;
 });
 
+let directionCallback = null;
+document.addEventListener("directionFunction", ({ detail }) => {
+  gameStates("receiveDirectionFunction");
+  directionCallback = detail.callback;
+});
+
 document.addEventListener("keydown", ({ key }) => {
   if (currentGameState === "menu") {
     gameStates("start");
   }
   if (currentGameState === "gameOver") {
     gameStates("restart");
+  }
+  if (currentGameState === "waitingForInput") {
+    if (directionCallback(key)) {
+      gameStates("resumePlaying");
+    }
+    return;
   }
   if (!playerLock) {
     roosta.keydown(key);
@@ -171,8 +195,8 @@ game.update = function (dt) {
     return;
   }
   roosta.update(dt);
-  enemies = enemies.filter((e) => !e.dead);
-  enemies.forEach((e) => e.update(dt));
+  this.enemies = this.enemies.filter((e) => !e.dead);
+  this.enemies.forEach((e) => e.update(dt));
   sploder.update(dt);
   if (currentGameState === "fadeToBlack") {
     playerLock = true;
@@ -216,13 +240,17 @@ game.draw = function () {
     game.context.fillText("dead", 100, 100);
     return;
   }
-  if (["play", "fadeToBlack", "fadeIn", "dying"].includes(currentGameState)) {
+  if (
+    ["waitingForInput", "play", "fadeToBlack", "fadeIn", "dying"].includes(
+      currentGameState
+    )
+  ) {
     const shakeAngle = Math.random() * Math.PI * 2;
     const shakeX = Math.round(Math.cos(shakeAngle) * shakeAmount);
     const shakeY = Math.round(Math.sin(shakeAngle) * shakeAmount);
     game.context.setTransform(1, 0, 0, 1, shakeX, shakeY);
     map.draw();
-    enemies.forEach((e) => {
+    this.enemies.forEach((e) => {
       if (!e.dead) {
         e.draw();
       }

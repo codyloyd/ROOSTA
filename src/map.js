@@ -11,7 +11,7 @@ class Tile {
   }
 
   isEmpty() {
-    return Boolean(!this.entity);
+    return !this.entity;
   }
 }
 
@@ -49,6 +49,10 @@ class Map {
     }
   }
 
+  getTile(x, y) {
+    return this.map[x][y];
+  }
+
   getTileFromCanvasCoords(x, y) {
     const tileX = Math.ceil(x / this.tileSize);
     const tileY = Math.ceil(y / this.tileSize);
@@ -66,14 +70,19 @@ class Map {
   }
 
   isPassable(x, y) {
-    const isPassable =
-      this.isInBounds(x, y) &&
-      this.map &&
-      this.map[x] &&
-      this.map[x][y] &&
-      this.map[x][y].isWalkable;
+    let isPassable = false;
+    if (this.map[x] && this.map[x][y]) {
+      isPassable = this.isInBounds(x, y) && this.map[x][y].isWalkable;
+    }
 
     return isPassable;
+  }
+
+  isEmpty(x, y) {
+    if (this.map[x] && this.map[x][y]) {
+      return this.isInBounds(x, y) && this.map[x][y].isEmpty();
+    }
+    return false;
   }
 
   draw() {
