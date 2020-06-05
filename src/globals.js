@@ -6,6 +6,10 @@ const game = new Game({
   parent: "game",
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  game.context.font = "30px Goblin";
+});
+
 const gridSize = 7;
 const tileSize = game.width / gridSize;
 const pixelSize = tileSize / 32;

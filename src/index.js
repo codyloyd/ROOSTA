@@ -1,13 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable func-names */
 import { machine, state } from "fn-machine";
-import { Roosta, Crab, Duck, Snake, Wasp, Star } from "./entity";
-import { game, gridSize, tileSize, pixelSize } from "./globals";
+import { Roosta, Crab, Duck, Snake, Wasp, Star, Entity } from "./entity";
+import { game, gridSize, tileSize, pixelSize, spriteSheet } from "./globals";
 import { Map } from "./map";
 import { randomFromArray } from "./util";
 import { Sploder } from "./particles";
 import "./sounds";
 import colors from "./colors";
+import { renderSpells } from "./domController";
 
 let currentGameState = "menu";
 let stateContext = {};
@@ -99,8 +100,7 @@ const map = new Map({
 });
 
 game.enemies = [];
-// const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
-const enemyConstructors = [Star, Duck];
+const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
 for (let i = 0; i < 8; i++) {
   const enemy = randomFromArray(enemyConstructors);
   const position = map.randomEmptyTile();
@@ -142,7 +142,13 @@ const roosta = new Roosta({
 let playerLock = false;
 
 document.addEventListener("splode", ({ detail }) => {
-  sploder.splode(detail.x + tileSize / 2, detail.y + tileSize / 2);
+  sploder.splode(
+    detail.x + tileSize / 2,
+    detail.y + tileSize / 2,
+    detail.noFall,
+    detail.colorArray,
+    detail.life
+  );
 });
 
 document.addEventListener("die", ({ detail }) => {
@@ -152,6 +158,14 @@ document.addEventListener("die", ({ detail }) => {
 let shakeAmount;
 document.addEventListener("screenShake", ({ detail }) => {
   shakeAmount = 10;
+});
+
+let beachBall = null;
+document.addEventListener("beachBall", ({ detail: { x1, y1, x2, y2 } }) => {
+  beachBall = new Entity({ x: x2, y: y2, tileSize, map, noTile: true });
+  beachBall.sprite = spriteSheet.getSprite(11, 0);
+  beachBall.displayX = x1;
+  beachBall.displayY = y1;
 });
 
 let directionCallback = null;
@@ -168,6 +182,10 @@ document.addEventListener("keydown", ({ key }) => {
     gameStates("restart");
   }
   if (currentGameState === "waitingForInput") {
+    if (key === "Escape") {
+      gameStates("resumePlaying");
+      return;
+    }
     if (directionCallback(key)) {
       gameStates("resumePlaying");
     }
@@ -176,9 +194,9 @@ document.addEventListener("keydown", ({ key }) => {
   if (!playerLock) {
     roosta.keydown(key);
   }
-  if (key === "Escape") {
-    gameStates("die");
-  }
+  // if (key === "Escape") {
+  //   gameStates("die");
+  // }
 });
 
 document.addEventListener("keyup", ({ key }) => {
@@ -186,6 +204,12 @@ document.addEventListener("keyup", ({ key }) => {
     roosta.keyup(key);
   }
 });
+
+document.addEventListener("updateSpells", ({ detail }) => {
+  renderSpells(roosta.spells);
+});
+
+renderSpells(roosta.spells);
 
 game.update = function (dt) {
   if (currentGameState === "menu") {
@@ -195,6 +219,22 @@ game.update = function (dt) {
   this.enemies = this.enemies.filter((e) => !e.dead);
   this.enemies.forEach((e) => e.update(dt));
   sploder.update(dt);
+  map.update(dt);
+  if (beachBall) {
+    beachBall.update(dt);
+    beachBall.speed += 8;
+    if (
+      beachBall.displayX === beachBall.x &&
+      beachBall.displayY === beachBall.y
+    ) {
+      document.dispatchEvent(
+        new CustomEvent("splode", {
+          detail: { x: beachBall.x, y: beachBall.y },
+        })
+      );
+      beachBall = null;
+    }
+  }
   if (currentGameState === "fadeToBlack") {
     playerLock = true;
     stateContext.faderOpacity += 0.04;
@@ -223,12 +263,9 @@ game.update = function (dt) {
 
 game.draw = function () {
   // this fillRect covers the entire screen and is the 'background' for our game
-  game.context.fillStyle = "#b2bcc2";
-  game.context.fillRect(0, 0, game.width, game.height);
+  // game.context.fillStyle = "#b2bcc2";
+  // game.context.fillRect(0, 0, game.width, game.height);
   if (currentGameState === "menu") {
-    game.context.font = "50px serif";
-    game.context.fillStyle = colors.black;
-    game.context.fillText("ROOSTA", 100, 100);
     return;
   }
   if (currentGameState === "gameOver") {
@@ -252,6 +289,9 @@ game.draw = function () {
         e.draw();
       }
     });
+    if (beachBall) {
+      beachBall.draw();
+    }
     roosta.draw();
     sploder.draw(game.context);
   }
@@ -264,6 +304,7 @@ game.draw = function () {
       game.height * 3
     );
   }
+  map.drawEffects();
 };
 
 // call game.start() to start the game loop!

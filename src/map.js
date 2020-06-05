@@ -13,6 +13,7 @@ class Tile {
     this.entity = null;
     this.trap = null;
     this.trapCallback = null;
+    this.effectCounter = 0;
   }
 
   triggerTrap() {
@@ -25,6 +26,25 @@ class Tile {
 
   isEmpty() {
     return !this.entity;
+  }
+
+  setEffect(sprite) {
+    this.effect = sprite;
+    this.effectCounter = 1;
+  }
+
+  update(dt) {
+    if (this.effectCounter) {
+      this.effectCounter = Math.max(this.effectCounter - dt, 0);
+    }
+  }
+
+  drawEffect(x, y) {
+    if (this.effectCounter) {
+      game.context.globalAlpha = this.effectCounter / 1;
+      this.effect.draw(x * tileSize, y * tileSize, tileSize, tileSize);
+      game.context.globalAlpha = 1;
+    }
   }
 
   draw(x, y) {
@@ -110,10 +130,26 @@ class Map {
     return false;
   }
 
+  update(dt) {
+    this.map.forEach((col, x) => {
+      col.forEach((tile, y) => {
+        tile.update(dt);
+      });
+    });
+  }
+
   draw() {
     this.map.forEach((col, x) => {
       col.forEach((tile, y) => {
         tile.draw(x, y);
+      });
+    });
+  }
+
+  drawEffects() {
+    this.map.forEach((col, x) => {
+      col.forEach((tile, y) => {
+        tile.drawEffect(x, y);
       });
     });
   }

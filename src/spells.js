@@ -1,8 +1,68 @@
 /* eslint-disable class-methods-use-this */
-import { game } from "./globals";
+import { game, spriteSheet } from "./globals";
+import colors from "./colors";
+import { randomFromArray, random } from "./util";
+
+const healSprite = spriteSheet.getSprite(15, 0);
+const splashSprite = spriteSheet.getSprite(14, 0);
+const splashSpriteHoriz = spriteSheet.getSprite(17, 0);
 
 const SpellsMixin = (superclass) =>
   class extends superclass {
+    constructor(opts) {
+      super(opts);
+      this.spells = [];
+      this.registeredSpells = [
+        {
+          spell: this.jump.bind(this),
+          name: "jump",
+          desc: "transport to a random empty tile",
+        },
+        {
+          spell: this.hurricane.bind(this),
+          name: "hurricane",
+          desc: "shuffle the enemies on the board",
+        },
+        {
+          spell: this.heal.bind(this),
+          name: "heal",
+          desc: "gain one health point",
+        },
+        {
+          spell: this.col.bind(this),
+          name: "column",
+          desc: "damage all enemies in your column",
+        },
+        {
+          spell: this.row.bind(this),
+          name: "row",
+          desc: "damage all enemies in your row",
+        },
+        {
+          spell: this.push.bind(this),
+          name: "push",
+          desc: "push all enemies away from you",
+        },
+        {
+          spell: this.pull.bind(this),
+          name: "pull",
+          desc: "pull all enemies toward you",
+        },
+      ];
+      this.getRandomSpell();
+      this.getRandomSpell();
+      this.getRandomSpell();
+      this.getRandomSpell();
+    }
+
+    getRandomSpell() {
+      const newSpell = randomFromArray(this.registeredSpells);
+      if (this.spells.includes(newSpell)) {
+        return this.getRandomSpell();
+      }
+      this.spells.push(newSpell);
+    }
+
     // transport to random tile
     jump() {
       const newTileCoords = this.map.randomEmptyTile();
@@ -27,12 +87,32 @@ const SpellsMixin = (superclass) =>
 
     heal() {
       this.hp = Math.min(this.hp + 1, this.maxHp);
+      this.map.getTileFromCanvasCoords(this.x, this.y).setEffect(healSprite);
+      document.dispatchEvent(
+        new CustomEvent("splode", {
+          detail: {
+            x: this.x,
+            y: this.y,
+            noFall: true,
+            life: 0.5,
+            colorArray: [
+              colors.green,
+              colors.darkGreen,
+              colors.lightGreen,
+              colors.darkBlue,
+            ],
+          },
+        })
+      );
     }
 
     // damage all in column
     col() {
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map[mapCoords.x].forEach((tile) => {
+        if (!tile.entity || (tile.entity && !tile.entity.isRoosta)) {
+          tile.setEffect(splashSprite);
+        }
         if (tile.entity && !tile.entity.isRoosta) {
           tile.entity.takeDamage();
         }
@@ -44,6 +124,9 @@ const SpellsMixin = (superclass) =>
       const mapCoords = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
       this.map.map.forEach((col) => {
         const tile = col[mapCoords.y];
+        if (!tile.entity || (tile.entity && !tile.entity.isRoosta)) {
+          tile.setEffect(splashSpriteHoriz);
+        }
         if (tile.entity && !tile.entity.isRoosta) {
           tile.entity.takeDamage();
         }
@@ -129,6 +212,19 @@ const SpellsMixin = (superclass) =>
       );
     }
 
+    dispatchBeachBall(x1, y1, x2, y2) {
+      document.dispatchEvent(
+        new CustomEvent("beachBall", {
+          detail: {
+            x1,
+            y1,
+            x2,
+            y2,
+          },
+        })
+      );
+    }
+
     // throw ball in some direction
     beachBall() {
       this.dispatchDirectionFunction((key) => {
@@ -139,6 +235,12 @@ const SpellsMixin = (superclass) =>
             for (let x = mapCoords.x + 1; x < mapLength; x++) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
+                this.dispatchBeachBall(
+                  this.x,
+                  this.y,
+                  tile.entity.x,
+                  tile.entity.y
+                );
                 tile.entity.takeDamage();
                 return true;
               }
@@ -148,6 +250,12 @@ const SpellsMixin = (superclass) =>
             for (let x = mapCoords.x - 1; x >= 0; x--) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
+                this.dispatchBeachBall(
+                  this.x,
+                  this.y,
+                  tile.entity.x,
+                  tile.entity.y
+                );
                 tile.entity.takeDamage();
                 return true;
               }
@@ -157,6 +265,12 @@ const SpellsMixin = (superclass) =>
             for (let y = mapCoords.y - 1; y >= 0; y--) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
+                this.dispatchBeachBall(
+                  this.x,
+                  this.y,
+                  tile.entity.x,
+                  tile.entity.y
+                );
                 tile.entity.takeDamage();
                 return true;
               }
@@ -166,6 +280,12 @@ const SpellsMixin = (superclass) =>
             for (let y = mapCoords.y + 1; y < mapLength; y++) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
+                this.dispatchBeachBall(
+                  this.x,
+                  this.y,
+                  tile.entity.x,
+                  tile.entity.y
+                );
                 tile.entity.takeDamage();
                 return true;
               }
@@ -271,21 +391,25 @@ const SpellsMixin = (superclass) =>
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
             const tile = this.map.getTile(x + 1, y);
+            if (tile.entity) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowLeft") {
             const tile = this.map.getTile(x - 1, y);
+            if (tile.entity) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowUp") {
             const tile = this.map.getTile(x, y - 1);
+            if (tile.entity) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowDown") {
             const tile = this.map.getTile(x, y + 1);
+            if (tile.entity) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
@@ -307,21 +431,25 @@ const SpellsMixin = (superclass) =>
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
             const tile = this.map.getTile(x + 1, y);
+            if (tile.entity) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowLeft") {
             const tile = this.map.getTile(x - 1, y);
+            if (tile.entity) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowUp") {
             const tile = this.map.getTile(x, y - 1);
+            if (tile.entity) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowDown") {
             const tile = this.map.getTile(x, y + 1);
+            if (tile.entity) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }

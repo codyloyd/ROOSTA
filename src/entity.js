@@ -15,7 +15,14 @@ import {
 import { SpellsMixin } from "./spells";
 
 class Entity {
-  constructor({ x, y, tileSize, map, doneCallback = () => {} }) {
+  constructor({
+    x,
+    y,
+    tileSize,
+    map,
+    doneCallback = () => {},
+    noTile = false,
+  }) {
     this.map = map;
     this.x = x;
     this.displayX = x;
@@ -29,8 +36,10 @@ class Entity {
     this.maxHp = 1;
     this.speed = 10;
 
-    const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
-    tile.entity = this;
+    if (!noTile) {
+      const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+      tile.entity = this;
+    }
   }
 
   takeDamage(p = 1) {
@@ -195,9 +204,9 @@ class Roosta extends SpellsMixin(Entity) {
     if (key === "ArrowDown") {
       this.move(0, 1);
     }
-    if (key === " ") {
-      // this.wait();
-      this.damageTrap();
+    if (key >= 1 && key <= 9) {
+      // this.col();
+      this.spells[key - 1].spell();
     }
   }
 

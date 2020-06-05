@@ -7,14 +7,46 @@
 </head>
 <body>
   <style>
+    @font-face {
+      font-family: Goblin;
+      src: url('./font/GoblinFont.ttf');
+    }
     body {
+      color: #fff;
       background: #17111a;
+      background-image: url("/img/background.png");
+      background-repeat: no-repeat;
+      font-family: "Goblin";
     }
     canvas {
-      border: 4px solid ffffff ;
-      background: #b2bcc2;
+      position: absolute;
+      border: 4px solid #ffffff;
+      top: 32px;
+      left: 369px;
+    }
+    #spells {
+      position: absolute;
+      left: 32px;
+      top: 116px;
+      height: 424px;
+      width: 300px;
+      padding: 16px 32px;
+      font-size: 16px;
+      color: #17111a;
+      line-height: 2;
     }
   </style>
+  <div id="spells">
+    <div>
+      1 - Heal
+    </div>
+    <div>
+      2 - Column
+    </div>
+    <div>
+      3 - Hurricane
+    </div>
+  </div>
   <div id="game"></div> 
   <script src="dist/main.js"></script>
 </body>
