@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import { Path } from "rot-js";
 import { random, randomFromArray } from "./util";
+import { renderSpells } from "./domController";
 import {
   healthSprite,
   roostaSprite,
@@ -206,7 +207,8 @@ class Roosta extends SpellsMixin(Entity) {
     }
     if (key >= 1 && key <= 9) {
       // this.col();
-      this.spells[key - 1].spell();
+      this.doSpell(this.spells[key - 1]);
+      renderSpells(this.spells);
     }
   }
 

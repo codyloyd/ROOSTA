@@ -25,6 +25,7 @@ const gameStates = machine(
   [
     state("menu", {
       start: (detail, context) => {
+        generateLevel();
         document.dispatchEvent(
           new CustomEvent("sound", {
             detail: {
@@ -94,25 +95,42 @@ const gameStates = machine(
 
 const sploder = new Sploder(pixelSize * 2);
 
-const map = new Map({
-  gridSize,
-  tileSize,
-});
+game.level = 1;
+let map;
+let roosta;
+const generateLevel = function () {
+  // setup map
+  map = new Map({
+    gridSize,
+    tileSize,
+  });
 
-game.enemies = [];
-const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
-for (let i = 0; i < 8; i++) {
-  const enemy = randomFromArray(enemyConstructors);
-  const position = map.randomEmptyTile();
-  game.enemies.push(
-    new enemy({
-      x: position.x * tileSize,
-      y: position.y * tileSize,
-      tileSize,
-      map,
-    })
-  );
-}
+  // generate enemies
+  game.enemies = [];
+  const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
+  for (let i = 0; i < 8; i++) {
+    const enemy = randomFromArray(enemyConstructors);
+    const position = map.randomEmptyTile();
+    game.enemies.push(
+      new enemy({
+        x: position.x * tileSize,
+        y: position.y * tileSize,
+        tileSize,
+        map,
+      })
+    );
+  }
+
+  const startingPos = map.randomEmptyTile();
+  roosta = new Roosta({
+    x: startingPos.x * tileSize,
+    y: startingPos.y * tileSize,
+    tileSize,
+    map,
+    doneCallback: gameTick,
+  });
+  renderSpells(roosta.spells);
+};
 
 const gameTick = function () {
   playerLock = true;
@@ -130,14 +148,14 @@ const gameTick = function () {
   Promise.all(enemyMovements).then(() => (playerLock = false));
 };
 
-const startingPos = map.randomEmptyTile();
-const roosta = new Roosta({
-  x: startingPos.x * tileSize,
-  y: startingPos.y * tileSize,
-  tileSize,
-  map,
-  doneCallback: gameTick,
-});
+// const startingPos = map.randomEmptyTile();
+// const roosta = new Roosta({
+//   x: startingPos.x * tileSize,
+//   y: startingPos.y * tileSize,
+//   tileSize,
+//   map,
+//   doneCallback: gameTick,
+// });
 
 let playerLock = false;
 
@@ -152,6 +170,7 @@ document.addEventListener("splode", ({ detail }) => {
 });
 
 document.addEventListener("die", ({ detail }) => {
+  playerLock = true;
   gameStates("die");
 });
 
@@ -205,12 +224,6 @@ document.addEventListener("keyup", ({ key }) => {
   }
 });
 
-document.addEventListener("updateSpells", ({ detail }) => {
-  renderSpells(roosta.spells);
-});
-
-renderSpells(roosta.spells);
-
 game.update = function (dt) {
   if (currentGameState === "menu") {
     return;
@@ -252,6 +265,7 @@ game.update = function (dt) {
     }
   }
   if (currentGameState === "dying") {
+    playerLock = true;
     shakeAmount += 0.2;
     if (shakeAmount > 20) {
       gameStates("transitionEnd");
@@ -262,9 +276,6 @@ game.update = function (dt) {
 };
 
 game.draw = function () {
-  // this fillRect covers the entire screen and is the 'background' for our game
-  // game.context.fillStyle = "#b2bcc2";
-  // game.context.fillRect(0, 0, game.width, game.height);
   if (currentGameState === "menu") {
     return;
   }

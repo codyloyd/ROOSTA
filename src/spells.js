@@ -48,11 +48,59 @@ const SpellsMixin = (superclass) =>
           name: "pull",
           desc: "pull all enemies toward you",
         },
+        {
+          spell: this.stun.bind(this),
+          name: "stun",
+          desc: "stuns all enemies for 1 turn",
+        },
+        {
+          spell: this.beachBall.bind(this),
+          name: "beach ball",
+          desc: "throw beach ball",
+        },
+        {
+          spell: this.dash.bind(this),
+          name: "dash",
+          desc: "dash in some direction, can damage enemies",
+        },
+        {
+          spell: this.damageTrap.bind(this),
+          name: "trap",
+          desc: "set a trap, will harm enemies that step on it",
+        },
+        {
+          spell: this.hitAllTrap.bind(this),
+          name: "super trap",
+          desc:
+            "set a trap, will harm all enemies of the type that steps on it",
+        },
+        {
+          spell: this.waterAttack.bind(this),
+          name: "water attack",
+          desc: "harms all enemies in water",
+        },
+        {
+          spell: this.bugSpray.bind(this),
+          name: "bug spray",
+          desc: "harms all wasps",
+        },
+        {
+          spell: this.wait.bind(this),
+          name: "wait",
+          desc: "wait a turn",
+        },
       ];
       this.getRandomSpell();
       this.getRandomSpell();
       this.getRandomSpell();
       this.getRandomSpell();
+    }
+
+    doSpell(spellObject) {
+      if (!spellObject.used) {
+        spellObject.used = true;
+        spellObject.spell();
+      }
     }
 
     getRandomSpell() {
