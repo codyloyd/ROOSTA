@@ -2,6 +2,7 @@
 import { game, spriteSheet } from "./globals";
 import colors from "./colors";
 import { randomFromArray, random } from "./util";
+import { renderSpells } from "./domController";
 
 const healSprite = spriteSheet.getSprite(15, 0);
 const splashSprite = spriteSheet.getSprite(14, 0);
@@ -11,13 +12,7 @@ const SpellsMixin = (superclass) =>
   class extends superclass {
     constructor(opts) {
       super(opts);
-      this.spells = [
-        {
-          spell: this.dash.bind(this),
-          name: "dash",
-          desc: "dash in some direction, can damage enemies",
-        },
-      ];
+      this.spells = [];
       this.registeredSpells = [
         {
           spell: this.jump.bind(this),
@@ -106,6 +101,7 @@ const SpellsMixin = (superclass) =>
     doSpell(spellObject) {
       if (!spellObject.used) {
         spellObject.used = true;
+        renderSpells(this.spells);
         spellObject.spell();
       }
     }

@@ -239,7 +239,6 @@ class Roosta extends SpellsMixin(Entity) {
     }
     if (key >= 1 && key <= 9) {
       this.doSpell(this.spells[key - 1]);
-      renderSpells(this.spells);
     }
   }
 

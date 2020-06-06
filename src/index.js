@@ -8,7 +8,7 @@ import { randomFromArray } from "./util";
 import { Sploder } from "./particles";
 import "./sounds";
 import colors from "./colors";
-import { renderSpells, renderDom } from "./domController";
+import { renderSpells, renderDom, renderMessage } from "./domController";
 
 let currentGameState = "menu";
 let stateContext = {};
@@ -59,6 +59,7 @@ const gameStates = machine(
         };
       },
       receiveDirectionFunction: () => {
+        renderMessage("select a direction, <br>ESC to cancel");
         return {
           state: "waitingForInput",
         };
@@ -66,6 +67,7 @@ const gameStates = machine(
     }),
     state("waitingForInput", {
       resumePlaying: () => {
+        renderSpells(roosta.spells);
         return {
           state: "play",
         };

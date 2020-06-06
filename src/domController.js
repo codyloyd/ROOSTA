@@ -12,9 +12,13 @@ const renderSpells = (spells) => {
   spellsDiv.innerHTML = renderedHTML;
 };
 
+const renderMessage = (message) => {
+  spellsDiv.innerHTML = message;
+};
+
 const renderDom = (level, coins) => {
   levelDiv.innerHTML = level;
   coinDiv.innerHTML = coins;
 };
 
-export { renderSpells, renderDom };
+export { renderSpells, renderDom, renderMessage };
