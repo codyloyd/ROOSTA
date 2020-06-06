@@ -20,6 +20,7 @@ import {
   arrowDownSprite,
   arrowRightSprite,
   arrowLeftSprite,
+  spawningSprite,
   tileSize,
 } from "./globals";
 import { SpellsMixin } from "./spells";
@@ -202,6 +203,13 @@ class Roosta extends SpellsMixin(Entity) {
       if (tile.coin) {
         tile.coin = false;
         this.coins++;
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "coin",
+            },
+          })
+        );
         renderDom(game.level, this.coins);
         if (this.coins % 3 === 0) {
           this.getRandomSpell();
@@ -282,8 +290,17 @@ class Roosta extends SpellsMixin(Entity) {
 }
 
 class Monster extends Entity {
+  constructor(opts) {
+    super(opts);
+    this.spawning = true;
+  }
+
   takeTurn(roosta) {
     super.takeTurn();
+    if (this.spawning) {
+      this.spawning = false;
+      return;
+    }
     if (this.stunned) {
       this.stunned = false;
       return;
@@ -325,6 +342,10 @@ class Monster extends Entity {
       offsetX = random(-50, 50) * this.shakeTimer;
       offsetY = random(-50, 50) * this.shakeTimer;
     }
+    if (this.spawning) {
+      spawningSprite.draw(displayX, displayY, tileSize, tileSize);
+      return;
+    }
     this.sprite.draw(
       displayX + offsetX,
       displayY + offsetY,
@@ -336,6 +357,7 @@ class Monster extends Entity {
   takeDamage(p) {
     super.takeDamage(p);
     this.stunned = true;
+    this.spawning = false;
     this.shakeTimer = 0.2;
     if (this.hp < 1) {
       document.dispatchEvent(
@@ -385,13 +407,13 @@ class Crab extends Monster {
   takeDamage(p) {
     super.takeDamage(p);
     if (this.hp > 0) {
-      // document.dispatchEvent(
-      //   new CustomEvent("sound", {
-      //     detail: {
-      //       sound: "quack",
-      //     },
-      //   })
-      // );
+      document.dispatchEvent(
+        new CustomEvent("sound", {
+          detail: {
+            sound: "snap",
+          },
+        })
+      );
     }
     if (this.hp === 1) {
       this.sprite = ouchCrabSprite;
@@ -439,13 +461,13 @@ class Snake extends Monster {
   takeDamage(p) {
     super.takeDamage(p);
     if (this.hp > 0) {
-      // document.dispatchEvent(
-      //   new CustomEvent("sound", {
-      //     detail: {
-      //       sound: "quack",
-      //     },
-      //   })
-      // );
+      document.dispatchEvent(
+        new CustomEvent("sound", {
+          detail: {
+            sound: "snap",
+          },
+        })
+      );
     }
     if (this.hp === 1) {
       this.sprite = ouchSnakeSprite;
@@ -489,13 +511,13 @@ class Star extends Monster {
   takeDamage(p) {
     super.takeDamage(p);
     if (this.hp > 0) {
-      // document.dispatchEvent(
-      //   new CustomEvent("sound", {
-      //     detail: {
-      //       sound: "quack",
-      //     },
-      //   })
-      // );
+      document.dispatchEvent(
+        new CustomEvent("sound", {
+          detail: {
+            sound: "oof",
+          },
+        })
+      );
     }
     if (this.hp === 1) {
       this.sprite = ouchStarSprite;

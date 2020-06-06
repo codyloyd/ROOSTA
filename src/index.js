@@ -112,6 +112,13 @@ game.level = 1;
 let map;
 let roosta;
 const generateLevel = function ({ existingRoosta } = {}) {
+  document.dispatchEvent(
+    new CustomEvent("sound", {
+      detail: {
+        sound: "steel",
+      },
+    })
+  );
   // setup map
   map = new Map({
     gridSize,

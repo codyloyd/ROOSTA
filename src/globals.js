@@ -46,6 +46,7 @@ const ouchDuckSprite = spriteSheet.getSprite(10, 0);
 const ouchCrabSprite = spriteSheet.getSprite(19, 0);
 const ouchStarSprite = spriteSheet.getSprite(20, 0);
 const ouchSnakeSprite = spriteSheet.getSprite(21, 0);
+const spawningSprite = spriteSheet.getSprite(22, 0);
 
 export {
   game,
@@ -71,4 +72,5 @@ export {
   ouchCrabSprite,
   ouchStarSprite,
   ouchSnakeSprite,
+  spawningSprite,
 };
