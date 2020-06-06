@@ -248,7 +248,8 @@ document.addEventListener("exit", () => {
   });
 });
 
-document.addEventListener("keydown", ({ key }) => {
+document.addEventListener("keydown", ({ key, preventDefault }) => {
+  preventDefault();
   if (currentGameState === "menu") {
     gameStates("start");
   }
