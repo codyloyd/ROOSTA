@@ -1,36 +1,38 @@
 import { Howl, Howler } from "howler";
 import { randomFromArray } from "./util";
-import "../sounds/pop1.mp3";
-import "../sounds/pop2.mp3";
-import "../sounds/pop3.mp3";
-import "../sounds/cluck1.mp3";
-import "../sounds/cluck2.mp3";
-import "../sounds/quack.wav";
-import "../sounds/oof.wav";
-import "../sounds/snap.wav";
-import "../sounds/coin.wav";
+import pop1src from "../sounds/pop1.mp3";
+import pop2src from "../sounds/pop2.mp3";
+import pop3src from "../sounds/pop3.mp3";
+import cluck1src from "../sounds/cluck1.mp3";
+import cluck2src from "../sounds/cluck2.mp3";
+import quacksrc from "../sounds/quack.wav";
+import oofsrc from "../sounds/oof.wav";
+import snapsrc from "../sounds/snap.wav";
+import coinsrc from "../sounds/coin.wav";
 import steelsrc from "../sounds/steel.wav";
-import "../sounds/steel2.wav";
+import steel2src from "../sounds/steel2.wav";
+import wavessrc from "../sounds/waves.mp3";
+import gullssrc from "../sounds/gulls.mp3";
 
-const pop1 = new Howl({ src: ["../sounds/pop1.mp3"] });
-const pop2 = new Howl({ src: ["../sounds/pop2.mp3"] });
-const pop3 = new Howl({ src: ["../sounds/pop3.mp3"] });
-const cluck1 = new Howl({ src: ["../sounds/cluck1.mp3"] });
-const cluck2 = new Howl({ src: ["../sounds/cluck2.mp3"] });
-const quack = new Howl({ src: ["../sounds/quack.wav"] });
-const oof = new Howl({ src: ["../sounds/oof.wav"] });
-const snap = new Howl({ src: ["../sounds/snap.wav"] });
-const coin = new Howl({ src: ["../sounds/coin.wav"] });
-const steel = new Howl({ src: ["dist/" + steelsrc] });
-const steel2 = new Howl({ src: ["../sounds/steel2.wav"] });
+const pop1 = new Howl({ src: [`dist/${pop1src}`] });
+const pop2 = new Howl({ src: [`dist/${pop2src}`] });
+const pop3 = new Howl({ src: [`dist/${pop3src}`] });
+const cluck1 = new Howl({ src: [`dist/${cluck1src}`] });
+const cluck2 = new Howl({ src: [`dist/${cluck2src}`] });
+const quack = new Howl({ src: [`dist/${quacksrc}`] });
+const oof = new Howl({ src: [`dist/${oofsrc}`] });
+const snap = new Howl({ src: [`dist/${snapsrc}`] });
+const coin = new Howl({ src: [`dist/${coinsrc}`] });
+const steel = new Howl({ src: [`dist/${steelsrc}`] });
+const steel2 = new Howl({ src: [`dist/${steel2src}`] });
 
 const waves = new Howl({
-  src: ["../sounds/waves.mp3"],
+  src: [`dist/${wavessrc}`],
   loop: true,
   volume: 0.1,
 });
 const gulls = new Howl({
-  src: ["../sounds/gulls.mp3"],
+  src: [`dist/${gullssrc}`],
   loop: true,
   volume: 0.05,
 });
