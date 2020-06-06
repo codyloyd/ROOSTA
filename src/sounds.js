@@ -9,7 +9,7 @@ import "../sounds/quack.wav";
 import "../sounds/oof.wav";
 import "../sounds/snap.wav";
 import "../sounds/coin.wav";
-import "../sounds/steel.wav";
+import steelsrc from "../sounds/steel.wav";
 import "../sounds/steel2.wav";
 
 const pop1 = new Howl({ src: ["../sounds/pop1.mp3"] });
@@ -21,7 +21,7 @@ const quack = new Howl({ src: ["../sounds/quack.wav"] });
 const oof = new Howl({ src: ["../sounds/oof.wav"] });
 const snap = new Howl({ src: ["../sounds/snap.wav"] });
 const coin = new Howl({ src: ["../sounds/coin.wav"] });
-const steel = new Howl({ src: ["../sounds/steel.wav"] });
+const steel = new Howl({ src: [steelsrc] });
 const steel2 = new Howl({ src: ["../sounds/steel2.wav"] });
 
 const waves = new Howl({
