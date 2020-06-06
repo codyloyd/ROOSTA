@@ -18,14 +18,14 @@ const tileSize = game.width / gridSize;
 const pixelSize = tileSize / 32;
 
 const spriteSheet = new SpriteSheet({
-  path: `dist/${background}`,
+  path: `dist/${sprite}`,
   context: game.context,
   colSize: 32,
   rowSize: 32,
 });
 
 const arrowSheet = new SpriteSheet({
-  path: "img/arrow.png",
+  path: `dist/${arrow}`,
   context: game.context,
   colSize: 15,
   rowSize: 15,
