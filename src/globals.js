@@ -18,7 +18,7 @@ const tileSize = game.width / gridSize;
 const pixelSize = tileSize / 32;
 
 const spriteSheet = new SpriteSheet({
-  path: "img/spritesheet.png",
+  path: `dist/${background}`,
   context: game.context,
   colSize: 32,
   rowSize: 32,
