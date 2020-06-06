@@ -9,7 +9,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(png|svg|jpg|gif)$/,
+        test: /\.(mp3|wav|png|svg|jpg|gif)$/,
         use: ["file-loader"],
       },
     ],

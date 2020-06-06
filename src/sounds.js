@@ -1,5 +1,16 @@
 import { Howl, Howler } from "howler";
 import { randomFromArray } from "./util";
+import "../sounds/pop1.mp3";
+import "../sounds/pop2.mp3";
+import "../sounds/pop3.mp3";
+import "../sounds/cluck1.mp3";
+import "../sounds/cluck2.mp3";
+import "../sounds/quack.wav";
+import "../sounds/oof.wav";
+import "../sounds/snap.wav";
+import "../sounds/coin.wav";
+import "../sounds/steel.wav";
+import "../sounds/steel2.wav";
 
 const pop1 = new Howl({ src: ["../sounds/pop1.mp3"] });
 const pop2 = new Howl({ src: ["../sounds/pop2.mp3"] });
