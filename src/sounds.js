@@ -21,7 +21,7 @@ const quack = new Howl({ src: ["../sounds/quack.wav"] });
 const oof = new Howl({ src: ["../sounds/oof.wav"] });
 const snap = new Howl({ src: ["../sounds/snap.wav"] });
 const coin = new Howl({ src: ["../sounds/coin.wav"] });
-const steel = new Howl({ src: [steelsrc] });
+const steel = new Howl({ src: ["dist/" + steelsrc] });
 const steel2 = new Howl({ src: ["../sounds/steel2.wav"] });
 
 const waves = new Howl({
