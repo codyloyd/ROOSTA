@@ -1,8 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import { Path } from "rot-js";
 import { random, randomFromArray } from "./util";
-import { renderSpells } from "./domController";
+import { renderSpells, renderDom } from "./domController";
 import {
+  game,
   healthSprite,
   roostaSprite,
   coolDuckSprite,
@@ -12,6 +13,14 @@ import {
   waspSprite,
   starSprite,
   ouchDuckSprite,
+  ouchCrabSprite,
+  ouchSnakeSprite,
+  ouchStarSprite,
+  arrowUpSprite,
+  arrowDownSprite,
+  arrowRightSprite,
+  arrowLeftSprite,
+  tileSize,
 } from "./globals";
 import { SpellsMixin } from "./spells";
 
@@ -165,6 +174,7 @@ class Roosta extends SpellsMixin(Entity) {
     this.hp = 3;
     this.maxHp = 3;
     this.sprite = roostaSprite;
+    this.coins = 0;
   }
 
   takeDamage() {
@@ -188,7 +198,21 @@ class Roosta extends SpellsMixin(Entity) {
 
   move(dx, dy) {
     if (super.move(dx, dy)) {
-      this.doneCallback();
+      const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+      if (tile.coin) {
+        tile.coin = false;
+        this.coins++;
+        renderDom(game.level, this.coins);
+        if (this.coins % 3 === 0) {
+          this.getRandomSpell();
+          renderSpells(this.spells);
+        }
+      }
+      if (tile.exit) {
+        document.dispatchEvent(new CustomEvent("exit"));
+      } else {
+        this.doneCallback();
+      }
     }
   }
 
@@ -206,10 +230,41 @@ class Roosta extends SpellsMixin(Entity) {
       this.move(0, 1);
     }
     if (key >= 1 && key <= 9) {
-      // this.col();
       this.doSpell(this.spells[key - 1]);
       renderSpells(this.spells);
     }
+  }
+
+  drawAvailableDirections() {
+    const size = tileSize / 2;
+    const midX = this.x + tileSize / 2 - size / 2;
+    const midY = this.y + tileSize / 2 - size / 2;
+    const { x, y } = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
+    const tiles = this.map.getAdjacentEmptyTiles(x, y);
+    tiles.forEach((tile) => {
+      if (tile.y - y === -1) {
+        arrowUpSprite.draw(midX, this.y - tileSize / 4, size, size);
+      }
+      if (tile.y - y === 1) {
+        arrowDownSprite.draw(
+          midX,
+          this.y + tileSize - tileSize / 4,
+          size,
+          size
+        );
+      }
+      if (tile.x - x === -1) {
+        arrowLeftSprite.draw(this.x - tileSize / 4, midY, size, size);
+      }
+      if (tile.x - x === 1) {
+        arrowRightSprite.draw(
+          this.x + tileSize - tileSize / 4,
+          midY,
+          size,
+          size
+        );
+      }
+    });
   }
 
   draw() {
@@ -257,9 +312,31 @@ class Monster extends Entity {
     return this.map.isPassable(x, y);
   }
 
+  update(dt) {
+    super.update(dt);
+    this.shakeTimer -= dt;
+  }
+
+  draw() {
+    const { displayX, displayY, tileSize } = this;
+    let offsetX = 0;
+    let offsetY = 0;
+    if (this.shakeTimer > 0) {
+      offsetX = random(-50, 50) * this.shakeTimer;
+      offsetY = random(-50, 50) * this.shakeTimer;
+    }
+    this.sprite.draw(
+      displayX + offsetX,
+      displayY + offsetY,
+      tileSize,
+      tileSize
+    );
+  }
+
   takeDamage(p) {
     super.takeDamage(p);
     this.stunned = true;
+    this.shakeTimer = 0.2;
     if (this.hp < 1) {
       document.dispatchEvent(
         new CustomEvent("splode", {
@@ -285,6 +362,7 @@ class Crab extends Monster {
     super(opts);
     this.sprite = crabSprite;
     this.name = "crab";
+    this.hp = 2;
   }
 
   canWalkHere(x, y) {
@@ -302,6 +380,22 @@ class Crab extends Monster {
 
   move(dx, dy) {
     super.move(dx, dy);
+  }
+
+  takeDamage(p) {
+    super.takeDamage(p);
+    if (this.hp > 0) {
+      // document.dispatchEvent(
+      //   new CustomEvent("sound", {
+      //     detail: {
+      //       sound: "quack",
+      //     },
+      //   })
+      // );
+    }
+    if (this.hp === 1) {
+      this.sprite = ouchCrabSprite;
+    }
   }
 }
 class Duck extends Monster {
@@ -325,13 +419,13 @@ class Duck extends Monster {
         })
       );
     }
+    if (this.hp === 1) {
+      this.sprite = ouchDuckSprite;
+    }
   }
 
   update(dt) {
     super.update(dt);
-    if (this.hp == 1) {
-      this.sprite = ouchDuckSprite;
-    }
   }
 }
 class Snake extends Monster {
@@ -339,6 +433,23 @@ class Snake extends Monster {
     super(opts);
     this.sprite = snakeSprite;
     this.name = "snake";
+    this.hp = 2;
+  }
+
+  takeDamage(p) {
+    super.takeDamage(p);
+    if (this.hp > 0) {
+      // document.dispatchEvent(
+      //   new CustomEvent("sound", {
+      //     detail: {
+      //       sound: "quack",
+      //     },
+      //   })
+      // );
+    }
+    if (this.hp === 1) {
+      this.sprite = ouchSnakeSprite;
+    }
   }
 }
 class Wasp extends Monster {
@@ -363,6 +474,7 @@ class Star extends Monster {
     this.sprite = starSprite;
     this.stunned = false;
     this.name = "star";
+    this.hp = 2;
   }
 
   takeTurn(roosta) {
@@ -372,6 +484,22 @@ class Star extends Monster {
     }
     super.takeTurn(roosta);
     this.stunned = true;
+  }
+
+  takeDamage(p) {
+    super.takeDamage(p);
+    if (this.hp > 0) {
+      // document.dispatchEvent(
+      //   new CustomEvent("sound", {
+      //     detail: {
+      //       sound: "quack",
+      //     },
+      //   })
+      // );
+    }
+    if (this.hp === 1) {
+      this.sprite = ouchStarSprite;
+    }
   }
 }
 

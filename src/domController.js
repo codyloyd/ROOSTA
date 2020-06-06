@@ -1,4 +1,6 @@
 const spellsDiv = document.getElementById("spells");
+const levelDiv = document.getElementById("level");
+const coinDiv = document.getElementById("coins");
 
 const renderSpells = (spells) => {
   let renderedHTML = "";
@@ -10,4 +12,9 @@ const renderSpells = (spells) => {
   spellsDiv.innerHTML = renderedHTML;
 };
 
-export { renderSpells };
+const renderDom = (level, coins) => {
+  levelDiv.innerHTML = level;
+  coinDiv.innerHTML = coins;
+};
+
+export { renderSpells, renderDom };

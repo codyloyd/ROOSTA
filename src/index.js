@@ -8,7 +8,7 @@ import { randomFromArray } from "./util";
 import { Sploder } from "./particles";
 import "./sounds";
 import colors from "./colors";
-import { renderSpells } from "./domController";
+import { renderSpells, renderDom } from "./domController";
 
 let currentGameState = "menu";
 let stateContext = {};
@@ -25,6 +25,7 @@ const gameStates = machine(
   [
     state("menu", {
       start: (detail, context) => {
+        game.level = 1;
         generateLevel();
         document.dispatchEvent(
           new CustomEvent("sound", {
@@ -50,6 +51,11 @@ const gameStates = machine(
       die: () => {
         return {
           state: "dying",
+        };
+      },
+      win: () => {
+        return {
+          state: "winScreen",
         };
       },
       receiveDirectionFunction: () => {
@@ -80,6 +86,13 @@ const gameStates = machine(
         };
       },
     }),
+    state("winScreen", {
+      restart: () => {
+        return {
+          state: "menu",
+        };
+      },
+    }),
     state("gameOver", {
       restart: () => {
         return {
@@ -98,17 +111,33 @@ const sploder = new Sploder(pixelSize * 2);
 game.level = 1;
 let map;
 let roosta;
-const generateLevel = function () {
+const generateLevel = function ({ existingRoosta } = {}) {
   // setup map
   map = new Map({
     gridSize,
     tileSize,
   });
 
+  const startingPos = map.randomEmptyTile();
+  if (!existingRoosta) {
+    roosta = new Roosta({
+      x: startingPos.x * tileSize,
+      y: startingPos.y * tileSize,
+      tileSize,
+      map,
+      doneCallback: gameTick,
+    });
+  } else {
+    roosta.map = map;
+    roosta.heal(true);
+    roosta.resetSpells();
+    roosta.moveTo(startingPos.x, startingPos.y);
+  }
+
   // generate enemies
   game.enemies = [];
   const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
-  for (let i = 0; i < 8; i++) {
+  function spawnRandomEnemy() {
     const enemy = randomFromArray(enemyConstructors);
     const position = map.randomEmptyTile();
     game.enemies.push(
@@ -120,19 +149,31 @@ const generateLevel = function () {
       })
     );
   }
+  for (let i = 0; i < game.level + 2; i++) {
+    spawnRandomEnemy();
+  }
+  turnCounter = 0;
 
-  const startingPos = map.randomEmptyTile();
-  roosta = new Roosta({
-    x: startingPos.x * tileSize,
-    y: startingPos.y * tileSize,
-    tileSize,
-    map,
-    doneCallback: gameTick,
-  });
   renderSpells(roosta.spells);
+  renderDom(game.level, roosta.coins);
 };
 
+let turnCounter = 0;
 const gameTick = function () {
+  const enemyConstructors = [Star, Duck, Crab, Snake, Wasp];
+  function spawnRandomEnemy() {
+    const enemy = randomFromArray(enemyConstructors);
+    const position = map.randomEmptyTile();
+    game.enemies.push(
+      new enemy({
+        x: position.x * tileSize,
+        y: position.y * tileSize,
+        tileSize,
+        map,
+      })
+    );
+  }
+  turnCounter++;
   playerLock = true;
   const enemyMovements = [];
   game.enemies.forEach((e, i) => {
@@ -146,16 +187,10 @@ const gameTick = function () {
     );
   });
   Promise.all(enemyMovements).then(() => (playerLock = false));
+  if (turnCounter % Math.max(10 - game.level, 3) == 0) {
+    spawnRandomEnemy();
+  }
 };
-
-// const startingPos = map.randomEmptyTile();
-// const roosta = new Roosta({
-//   x: startingPos.x * tileSize,
-//   y: startingPos.y * tileSize,
-//   tileSize,
-//   map,
-//   doneCallback: gameTick,
-// });
 
 let playerLock = false;
 
@@ -193,11 +228,22 @@ document.addEventListener("directionFunction", ({ detail }) => {
   directionCallback = detail.callback;
 });
 
+document.addEventListener("exit", () => {
+  game.level += 1;
+  if (game.level > 6) {
+    gameStates("win");
+    return;
+  }
+  generateLevel({
+    existingRoosta: roosta,
+  });
+});
+
 document.addEventListener("keydown", ({ key }) => {
   if (currentGameState === "menu") {
     gameStates("start");
   }
-  if (currentGameState === "gameOver") {
+  if (currentGameState === "gameOver" || currentGameState === "winScreen") {
     gameStates("restart");
   }
   if (currentGameState === "waitingForInput") {
@@ -276,13 +322,26 @@ game.update = function (dt) {
 };
 
 game.draw = function () {
+  game.context.fillStyle = colors.black;
+  game.context.fillRect(-100, -100, 2000, 2000);
   if (currentGameState === "menu") {
+    game.context.font = "25px Goblin";
+    game.context.fillStyle = colors.gray;
+    game.context.fillText("press a key to start", 40, 100);
     return;
   }
   if (currentGameState === "gameOver") {
-    game.context.font = "50px serif";
-    game.context.fillStyle = colors.black;
-    game.context.fillText("dead", 100, 100);
+    game.context.font = "25px Goblin";
+    game.context.fillStyle = colors.gray;
+    game.context.fillText("dead", 60, 100);
+    game.context.fillText("press a key to retry", 20, 300);
+    return;
+  }
+  if (currentGameState === "winScreen") {
+    game.context.font = "25px Goblin";
+    game.context.fillStyle = colors.gray;
+    game.context.fillText("YOU WIN", 60, 100);
+    game.context.fillText("press a key to retry", 20, 300);
     return;
   }
   if (
@@ -304,6 +363,9 @@ game.draw = function () {
       beachBall.draw();
     }
     roosta.draw();
+    if (currentGameState == "waitingForInput") {
+      roosta.drawAvailableDirections();
+    }
     sploder.draw(game.context);
   }
   if (currentGameState === "fadeToBlack" || currentGameState === "fadeIn") {

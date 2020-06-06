@@ -38,8 +38,34 @@
     #spells .used {
       color: #17111a55;
     }
+    .data {
+      color: #17111a;
+      position: absolute;
+      top: 568px;
+      display: flex;
+      justify-content: space-between;
+      width: 238px;
+      left: 64px;
+    }
+    .data > div {
+      text-align: center;
+    }
+    .data > div >div {
+      margin-top: 16px;
+      font-size: 32px;
+    }
   </style>
   <div id="spells">
+  </div>
+  <div class="data">
+    <div>
+      level
+      <div id="level"></div>
+    </div>
+    <div>
+      coins
+      <div id="coins"></div>
+    </div>
   </div>
   <div id="game"></div> 
   <script src="dist/main.js"></script>

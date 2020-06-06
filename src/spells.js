@@ -11,7 +11,13 @@ const SpellsMixin = (superclass) =>
   class extends superclass {
     constructor(opts) {
       super(opts);
-      this.spells = [];
+      this.spells = [
+        {
+          spell: this.dash.bind(this),
+          name: "dash",
+          desc: "dash in some direction, can damage enemies",
+        },
+      ];
       this.registeredSpells = [
         {
           spell: this.jump.bind(this),
@@ -91,9 +97,10 @@ const SpellsMixin = (superclass) =>
         },
       ];
       this.getRandomSpell();
-      this.getRandomSpell();
-      this.getRandomSpell();
-      this.getRandomSpell();
+    }
+
+    resetSpells() {
+      this.spells.forEach((s) => (s.used = false));
     }
 
     doSpell(spellObject) {
@@ -133,25 +140,27 @@ const SpellsMixin = (superclass) =>
       });
     }
 
-    heal() {
+    heal(noEffect) {
       this.hp = Math.min(this.hp + 1, this.maxHp);
-      this.map.getTileFromCanvasCoords(this.x, this.y).setEffect(healSprite);
-      document.dispatchEvent(
-        new CustomEvent("splode", {
-          detail: {
-            x: this.x,
-            y: this.y,
-            noFall: true,
-            life: 0.5,
-            colorArray: [
-              colors.green,
-              colors.darkGreen,
-              colors.lightGreen,
-              colors.darkBlue,
-            ],
-          },
-        })
-      );
+      if (!noEffect) {
+        this.map.getTileFromCanvasCoords(this.x, this.y).setEffect(healSprite);
+        document.dispatchEvent(
+          new CustomEvent("splode", {
+            detail: {
+              x: this.x,
+              y: this.y,
+              noFall: true,
+              life: 0.5,
+              colorArray: [
+                colors.green,
+                colors.darkGreen,
+                colors.lightGreen,
+                colors.darkBlue,
+              ],
+            },
+          })
+        );
+      }
     }
 
     // damage all in column
@@ -280,6 +289,8 @@ const SpellsMixin = (superclass) =>
         const mapLength = this.map.map.length;
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
+            const nextTile = this.map.getTile(mapCoords.x + 1, mapCoords.y);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let x = mapCoords.x + 1; x < mapLength; x++) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
@@ -295,6 +306,8 @@ const SpellsMixin = (superclass) =>
             }
           }
           if (key === "ArrowLeft") {
+            const nextTile = this.map.getTile(mapCoords.x - 1, mapCoords.y);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let x = mapCoords.x - 1; x >= 0; x--) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
@@ -310,6 +323,8 @@ const SpellsMixin = (superclass) =>
             }
           }
           if (key === "ArrowUp") {
+            const nextTile = this.map.getTile(mapCoords.x, mapCoords.y - 1);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let y = mapCoords.y - 1; y >= 0; y--) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
@@ -325,6 +340,8 @@ const SpellsMixin = (superclass) =>
             }
           }
           if (key === "ArrowDown") {
+            const nextTile = this.map.getTile(mapCoords.x, mapCoords.y + 1);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let y = mapCoords.y + 1; y < mapLength; y++) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
@@ -352,6 +369,8 @@ const SpellsMixin = (superclass) =>
         const mapLength = this.map.map.length;
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
+            const nextTile = this.map.getTile(mapCoords.x + 1, mapCoords.y);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let x = mapCoords.x + 1; x < mapLength; x++) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
@@ -370,6 +389,8 @@ const SpellsMixin = (superclass) =>
             this.moveTo(mapLength - 1, mapCoords.y);
           }
           if (key === "ArrowLeft") {
+            const nextTile = this.map.getTile(mapCoords.x - 1, mapCoords.y);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let x = mapCoords.x - 1; x >= 0; x--) {
               const tile = this.map.map[x][mapCoords.y];
               if (tile.entity) {
@@ -388,6 +409,8 @@ const SpellsMixin = (superclass) =>
             this.moveTo(0, mapCoords.y);
           }
           if (key === "ArrowUp") {
+            const nextTile = this.map.getTile(mapCoords.x, mapCoords.y - 1);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let y = mapCoords.y - 1; y >= 0; y--) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
@@ -406,6 +429,8 @@ const SpellsMixin = (superclass) =>
             this.moveTo(mapCoords.x, 0);
           }
           if (key === "ArrowDown") {
+            const nextTile = this.map.getTile(mapCoords.x, mapCoords.y + 1);
+            if (nextTile.entity || !nextTile.isWalkable) return false;
             for (let y = mapCoords.y + 1; y < mapLength; y++) {
               const tile = this.map.map[mapCoords.x][y];
               if (tile.entity) {
@@ -439,25 +464,25 @@ const SpellsMixin = (superclass) =>
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
             const tile = this.map.getTile(x + 1, y);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowLeft") {
             const tile = this.map.getTile(x - 1, y);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowUp") {
             const tile = this.map.getTile(x, y - 1);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowDown") {
             const tile = this.map.getTile(x, y + 1);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "damage";
             tile.trapCallback = damageTrapFunction;
           }
@@ -479,25 +504,25 @@ const SpellsMixin = (superclass) =>
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
           if (key === "ArrowRight") {
             const tile = this.map.getTile(x + 1, y);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowLeft") {
             const tile = this.map.getTile(x - 1, y);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowUp") {
             const tile = this.map.getTile(x, y - 1);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
           if (key === "ArrowDown") {
             const tile = this.map.getTile(x, y + 1);
-            if (tile.entity) return false;
+            if (tile.entity || !tile.isWalkable) return false;
             tile.trap = "hitAll";
             tile.trapCallback = damageTrapFunction;
           }
