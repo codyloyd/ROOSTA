@@ -21,6 +21,7 @@
     "webpack-cli": "3.3.11"
   },
   "dependencies": {
+    "file-loader": "6.0.0",
     "fn-machine": "0.0.13",
     "howler": "2.2.0",
     "rot-js": "2.1.2"

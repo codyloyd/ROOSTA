@@ -1,4 +1,7 @@
 import { Game, SpriteSheet } from "@codyloyd/minotaur-base";
+import background from "../img/background.png";
+import sprite from "../img/spritesheet.png";
+import arrow from "../img/arrow.png";
 
 const game = new Game({
   width: 600,
@@ -15,14 +18,14 @@ const tileSize = game.width / gridSize;
 const pixelSize = tileSize / 32;
 
 const spriteSheet = new SpriteSheet({
-  path: "/img/spritesheet.png",
+  path: "img/spritesheet.png",
   context: game.context,
   colSize: 32,
   rowSize: 32,
 });
 
 const arrowSheet = new SpriteSheet({
-  path: "/img/arrow.png",
+  path: "img/arrow.png",
   context: game.context,
   colSize: 15,
   rowSize: 15,
