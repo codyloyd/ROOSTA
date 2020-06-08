@@ -248,8 +248,8 @@ document.addEventListener("exit", () => {
   });
 });
 
-document.addEventListener("keydown", ({ key, preventDefault }) => {
-  preventDefault();
+document.addEventListener("keydown", (e) => {
+  const { key } = e;
   if (currentGameState === "menu") {
     gameStates("start");
   }
@@ -267,6 +267,7 @@ document.addEventListener("keydown", ({ key, preventDefault }) => {
     return;
   }
   if (!playerLock) {
+    e.preventDefault();
     roosta.keydown(key);
   }
   // if (key === "Escape") {
