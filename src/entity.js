@@ -224,6 +224,33 @@ class Roosta extends SpellsMixin(Entity) {
     }
   }
 
+  moveTo(x, y) {
+    if (super.moveTo(x, y)) {
+      const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+      if (tile.coin) {
+        tile.coin = false;
+        this.coins++;
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "coin",
+            },
+          })
+        );
+        renderDom(game.level, this.coins);
+        if (this.coins % 3 === 0) {
+          this.getRandomSpell();
+          renderSpells(this.spells);
+        }
+      }
+      if (tile.exit) {
+        document.dispatchEvent(new CustomEvent("exit"));
+      } else {
+        this.doneCallback();
+      }
+    }
+  }
+
   keydown(key) {
     if (key === "ArrowRight") {
       this.move(1, 0);
@@ -359,6 +386,10 @@ class Monster extends Entity {
     this.spawning = false;
     this.shakeTimer = 0.2;
     if (this.hp < 1) {
+      const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+      if (Math.random() < 0.15) {
+        tile.coin = true;
+      }
       document.dispatchEvent(
         new CustomEvent("splode", {
           detail: {

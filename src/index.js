@@ -27,10 +27,18 @@ const gameStates = machine(
       start: (detail, context) => {
         game.level = 1;
         generateLevel();
+        document.getElementById("splash").style.transform = "translateY(-100%)";
         document.dispatchEvent(
           new CustomEvent("sound", {
             detail: {
               sound: "background",
+            },
+          })
+        );
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "themeStop",
             },
           })
         );
@@ -49,11 +57,26 @@ const gameStates = machine(
     }),
     state("play", {
       die: () => {
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "theme",
+            },
+          })
+        );
         return {
           state: "dying",
         };
       },
       win: () => {
+        document.getElementById("win").style.opacity = "1";
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "theme",
+            },
+          })
+        );
         return {
           state: "winScreen",
         };
@@ -83,6 +106,7 @@ const gameStates = machine(
     }),
     state("fadeToBlack", {
       transitionEnd: () => {
+        document.getElementById("gameover").style.opacity = "1";
         return {
           state: "gameOver",
         };
@@ -90,6 +114,15 @@ const gameStates = machine(
     }),
     state("winScreen", {
       restart: () => {
+        document.getElementById("splash").style.transform = "translateY(0%)";
+        document.getElementById("win").style.opacity = "0";
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "backgroundStop",
+            },
+          })
+        );
         return {
           state: "menu",
         };
@@ -97,6 +130,15 @@ const gameStates = machine(
     }),
     state("gameOver", {
       restart: () => {
+        document.getElementById("splash").style.transform = "translateY(0%)";
+        document.getElementById("gameover").style.opacity = "0";
+        document.dispatchEvent(
+          new CustomEvent("sound", {
+            detail: {
+              sound: "backgroundStop",
+            },
+          })
+        );
         return {
           state: "menu",
         };
@@ -196,8 +238,13 @@ const gameTick = function () {
     );
   });
   Promise.all(enemyMovements).then(() => (playerLock = false));
-  if (turnCounter % Math.max(10 - game.level, 3) == 0) {
-    spawnRandomEnemy();
+  if (
+    (turnCounter < 60 && turnCounter % Math.max(10 - game.level, 3) == 0) ||
+    (turnCounter > 60 && Math.random() < 0.9)
+  ) {
+    if (game.enemies.length < 12) {
+      spawnRandomEnemy();
+    }
   }
 };
 
@@ -239,7 +286,7 @@ document.addEventListener("directionFunction", ({ detail }) => {
 
 document.addEventListener("exit", () => {
   game.level += 1;
-  if (game.level > 6) {
+  if (game.level > 8) {
     gameStates("win");
     return;
   }
@@ -251,7 +298,9 @@ document.addEventListener("exit", () => {
 document.addEventListener("keydown", (e) => {
   const { key } = e;
   if (currentGameState === "menu") {
-    gameStates("start");
+    if (key === "Enter") {
+      gameStates("start");
+    }
   }
   if (currentGameState === "gameOver" || currentGameState === "winScreen") {
     gameStates("restart");
@@ -267,7 +316,9 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (!playerLock) {
-    e.preventDefault();
+    if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
+      e.preventDefault();
+    }
     roosta.keydown(key);
   }
   // if (key === "Escape") {
@@ -336,23 +387,12 @@ game.draw = function () {
   game.context.fillStyle = colors.black;
   game.context.fillRect(-100, -100, 2000, 2000);
   if (currentGameState === "menu") {
-    game.context.font = "25px Goblin";
-    game.context.fillStyle = colors.gray;
-    game.context.fillText("press a key to start", 40, 100);
     return;
   }
   if (currentGameState === "gameOver") {
-    game.context.font = "25px Goblin";
-    game.context.fillStyle = colors.gray;
-    game.context.fillText("dead", 60, 100);
-    game.context.fillText("press a key to retry", 20, 300);
     return;
   }
   if (currentGameState === "winScreen") {
-    game.context.font = "25px Goblin";
-    game.context.fillStyle = colors.gray;
-    game.context.fillText("YOU WIN", 60, 100);
-    game.context.fillText("press a key to retry", 20, 300);
     return;
   }
   if (

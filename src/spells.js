@@ -111,7 +111,9 @@ const SpellsMixin = (superclass) =>
       if (this.spells.includes(newSpell)) {
         return this.getRandomSpell();
       }
-      this.spells.push(newSpell);
+      if (this.spells.length < 9) {
+        this.spells.push(newSpell);
+      }
     }
 
     // transport to random tile
@@ -454,7 +456,7 @@ const SpellsMixin = (superclass) =>
     damageTrap() {
       this.dispatchDirectionFunction((key) => {
         const damageTrapFunction = function () {
-          this.entity.takeDamage();
+          this.entity.takeDamage(2);
         };
         const { x, y } = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
@@ -495,6 +497,9 @@ const SpellsMixin = (superclass) =>
           game.enemies
             .filter((e) => e.name === this.entity.name)
             .forEach((e) => e.takeDamage());
+          if (this.entity) {
+            this.entity.takeDamage(2);
+          }
         };
         const { x, y } = this.map.getMapCoordsFromCanvasCoords(this.x, this.y);
         if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {

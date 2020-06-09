@@ -1,7 +1,11 @@
 import { Game, SpriteSheet } from "@codyloyd/minotaur-base";
-import background from "../img/background.png";
 import sprite from "../img/spritesheet.png";
 import arrow from "../img/arrow.png";
+import "../img/background.png";
+import "../img/splash.png";
+import "../img/gameover.png";
+import "../img/WIN.png";
+import "../font/GoblinFont.ttf";
 
 const game = new Game({
   width: 600,
@@ -18,14 +22,14 @@ const tileSize = game.width / gridSize;
 const pixelSize = tileSize / 32;
 
 const spriteSheet = new SpriteSheet({
-  path: `dist/${sprite}`,
+  path: `${sprite}`,
   context: game.context,
   colSize: 32,
   rowSize: 32,
 });
 
 const arrowSheet = new SpriteSheet({
-  path: `dist/${arrow}`,
+  path: `${arrow}`,
   context: game.context,
   colSize: 15,
   rowSize: 15,

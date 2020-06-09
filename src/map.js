@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { Map as RotMap } from "rot-js";
-import { random } from "./util";
+import { random, shuffleArray, tryTo } from "./util";
 import { spriteSheet, tileSize, game } from "./globals";
 
 const hitallTrapSprite = spriteSheet.getSprite(12, 0);
@@ -9,7 +9,7 @@ const exitSprite = spriteSheet.getSprite(18, 0);
 const coinSprite = spriteSheet.getSprite(16, 0);
 
 class Tile {
-  constructor({ isWalkable, sprite, x, y }) {
+  constructor({ isWalkable, sprite, x, y, map }) {
     this.isWalkable = isWalkable;
     this.x = x;
     this.y = y;
@@ -20,6 +20,7 @@ class Tile {
     this.effectCounter = 0;
     this.exit = false;
     this.coin = false;
+    this.map = map;
   }
 
   triggerTrap() {
@@ -37,6 +38,37 @@ class Tile {
   setEffect(sprite) {
     this.effect = sprite;
     this.effectCounter = 1;
+  }
+
+  getNeighbor(dx, dy) {
+    return this.map.getTile(this.x + dx, this.y + dy);
+  }
+
+  getAdjacentNeighbors() {
+    return shuffleArray([
+      this.getNeighbor(0, -1),
+      this.getNeighbor(0, 1),
+      this.getNeighbor(-1, 0),
+      this.getNeighbor(1, 0),
+    ]);
+  }
+
+  getAdjacentPassableNeighbors() {
+    return this.getAdjacentNeighbors().filter((t) => t.isWalkable);
+  }
+
+  getConnectedTiles() {
+    let connectedTiles = [this];
+    let frontier = [this];
+    while (frontier.length) {
+      const neighbors = frontier
+        .pop()
+        .getAdjacentPassableNeighbors()
+        .filter((t) => !connectedTiles.includes(t));
+      connectedTiles = connectedTiles.concat(neighbors);
+      frontier = frontier.concat(neighbors);
+    }
+    return connectedTiles;
   }
 
   update(dt) {
@@ -78,16 +110,12 @@ class Map {
     this.tileSize = tileSize;
     this.spriteSheet = spriteSheet;
     this.map = [];
-
-    const localMap = new RotMap.Cellular(gridSize, gridSize, {
-      born: [4, 5],
-      survive: [2, 3, 4, 5],
-      connected: true,
+    this.generateMap(gridSize);
+    tryTo("generate map", () => {
+      const passableTiles = this.generateMap(gridSize);
+      const { x, y } = this.randomEmptyTile();
+      return this.getTile(x, y).getConnectedTiles().length === passableTiles;
     });
-    localMap.randomize(0.4);
-    localMap.create();
-    localMap.create();
-    localMap.connect(this.createMapCallback.bind(this));
     // set exit
     const { x, y } = this.randomEmptyTile();
     this.getTile(x, y).exit = true;
@@ -98,24 +126,41 @@ class Map {
     }
   }
 
-  createMapCallback(x, y, z) {
+  generateMap(gridSize) {
+    let passableTiles = 0;
     const wallSprite = this.spriteSheet.getSprite(2, 0);
-    const wallTile = new Tile({ isWalkable: false, sprite: wallSprite, x, y });
-
     const floorSprite = this.spriteSheet.getSprite(1, 0);
-    const floorTile = new Tile({ isWalkable: true, sprite: floorSprite, x, y });
-    if (!this.map[x]) {
-      this.map[x] = [];
+    for (let i = 0; i < gridSize; i++) {
+      this.map[i] = [];
+      for (let j = 0; j < gridSize; j++) {
+        if (Math.random() < 0.3) {
+          this.map[i][j] = new Tile({
+            isWalkable: false,
+            sprite: wallSprite,
+            x: i,
+            y: j,
+            map: this,
+          });
+        } else {
+          passableTiles++;
+          this.map[i][j] = new Tile({
+            isWalkable: true,
+            sprite: floorSprite,
+            x: i,
+            y: j,
+            map: this,
+          });
+        }
+      }
     }
-    if (z) {
-      this.map[x][y] = wallTile;
-    } else {
-      this.map[x][y] = floorTile;
-    }
+    return passableTiles;
   }
 
   getTile(x, y) {
-    return this.map[x][y];
+    if (this.isInBounds(x, y)) {
+      return this.map[x][y];
+    }
+    return new Tile({ isWalkable: false });
   }
 
   getTileFromCanvasCoords(x, y) {
@@ -207,7 +252,8 @@ class Map {
     if (
       this.map[x][y].isEmpty() &&
       this.map[x][y].isWalkable &&
-      !this.map[x][y].exit
+      !this.map[x][y].exit &&
+      !this.map[x][y].coin
     ) {
       return { x, y };
     }
