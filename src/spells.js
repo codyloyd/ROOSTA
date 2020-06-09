@@ -12,7 +12,18 @@ const SpellsMixin = (superclass) =>
   class extends superclass {
     constructor(opts) {
       super(opts);
-      this.spells = [];
+      this.spells = [
+        {
+          spell: this.push.bind(this),
+          name: "push",
+          desc: "push all enemies away from you",
+        },
+        {
+          spell: this.pull.bind(this),
+          name: "pull",
+          desc: "pull all enemies toward you",
+        },
+      ];
       this.registeredSpells = [
         {
           spell: this.jump.bind(this),
@@ -538,7 +549,7 @@ const SpellsMixin = (superclass) =>
       this.map.map.forEach((col) => {
         col.forEach((tile) => {
           if (!tile.isWalkable && tile.entity) {
-            tile.entity.takeDamage();
+            tile.entity.takeDamage(2);
           }
         });
       });

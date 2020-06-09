@@ -132,7 +132,8 @@ class Entity {
   }
 
   canWalkHere(x, y) {
-    if (this.isBeingMoved) {
+    const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+    if (this.isBeingMoved || !tile.isWalkable) {
       this.isBeingMoved = false;
       return this.map.isInBounds(x, y);
     }
@@ -352,6 +353,11 @@ class Monster extends Entity {
   }
 
   aStarCallback(x, y) {
+    const tile = this.map.getTileFromCanvasCoords(this.x, this.y);
+    if (this.isBeingMoved || !tile.isWalkable) {
+      this.isBeingMoved = false;
+      return this.map.isInBounds(x, y);
+    }
     return this.map.isPassable(x, y);
   }
 

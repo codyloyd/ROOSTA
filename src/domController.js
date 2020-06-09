@@ -7,7 +7,8 @@ const renderSpells = (spells) => {
   spells.forEach((spell, i) => {
     renderedHTML += `<div ${spell.used ? "class=used" : ""}>${i + 1} - ${
       spell.name
-    }</div>`;
+    }
+    </div>`;
   });
   spellsDiv.innerHTML = renderedHTML;
 };
