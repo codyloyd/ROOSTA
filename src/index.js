@@ -19,12 +19,21 @@ const onStateChange = function (state) {
 
 const initialContext = {
   faderOpacity: 0,
+  previousState: null,
 };
 
 const gameStates = machine(
   [
     state("menu", {
+      help: (detail, context) => {
+        document.getElementById("help").style.transform = "translateY(0)";
+        return {
+          state: "help",
+          context: { ...context, ...{ previousState: detail.currentState } },
+        };
+      },
       start: (detail, context) => {
+        console.log(context);
         game.level = 1;
         generateLevel();
         document.getElementById("splash").style.transform = "translateY(-100%)";
@@ -48,6 +57,15 @@ const gameStates = machine(
         };
       },
     }),
+    state("help", {
+      restart: (detail, context) => {
+        document.getElementById("help").style.transform = "translateY(-200%)";
+        return {
+          state: context.previousState,
+          context: { ...context, ...{ previousState: "help" } },
+        };
+      },
+    }),
     state("fadeIn", {
       transitionEnd: () => {
         return {
@@ -56,6 +74,13 @@ const gameStates = machine(
       },
     }),
     state("play", {
+      help: (detail, context) => {
+        document.getElementById("help").style.transform = "translateY(0)";
+        return {
+          state: "help",
+          context: { ...context, ...{ previousState: detail.currentState } },
+        };
+      },
       die: () => {
         document.dispatchEvent(
           new CustomEvent("sound", {
@@ -302,8 +327,13 @@ document.addEventListener("keydown", (e) => {
       gameStates("start");
     }
   }
-  if (currentGameState === "gameOver" || currentGameState === "winScreen") {
+  if (
+    currentGameState === "help" ||
+    currentGameState === "gameOver" ||
+    currentGameState === "winScreen"
+  ) {
     gameStates("restart");
+    return;
   }
   if (currentGameState === "waitingForInput") {
     if (key === "Escape") {
@@ -314,6 +344,9 @@ document.addEventListener("keydown", (e) => {
       gameStates("resumePlaying");
     }
     return;
+  }
+  if (key === "?") {
+    gameStates("help", { currentState: currentGameState });
   }
   if (!playerLock) {
     if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
@@ -333,7 +366,7 @@ document.addEventListener("keyup", ({ key }) => {
 });
 
 game.update = function (dt) {
-  if (currentGameState === "menu") {
+  if (currentGameState === "menu" || currentGameState === "help") {
     return;
   }
   roosta.update(dt);
@@ -386,7 +419,7 @@ game.update = function (dt) {
 game.draw = function () {
   game.context.fillStyle = colors.black;
   game.context.fillRect(-100, -100, 2000, 2000);
-  if (currentGameState === "menu") {
+  if (currentGameState === "menu" || stateContext.previousState === "menu") {
     return;
   }
   if (currentGameState === "gameOver") {
@@ -396,9 +429,14 @@ game.draw = function () {
     return;
   }
   if (
-    ["waitingForInput", "play", "fadeToBlack", "fadeIn", "dying"].includes(
-      currentGameState
-    )
+    [
+      "help",
+      "waitingForInput",
+      "play",
+      "fadeToBlack",
+      "fadeIn",
+      "dying",
+    ].includes(currentGameState)
   ) {
     const shakeAngle = Math.random() * Math.PI * 2;
     const shakeX = Math.round(Math.cos(shakeAngle) * shakeAmount);

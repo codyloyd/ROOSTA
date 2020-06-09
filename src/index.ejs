@@ -66,7 +66,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 99;
+      z-index: 103;
       opacity: 0;
       transition: all .5s ease-in-out;
     }
@@ -74,9 +74,35 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 99;
+      z-index: 103;
       opacity: 0;
       transition: all .5s ease-in-out;
+    }
+    #help {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 101;
+      width: 500px;
+      line-height: 1.6;
+      background: rgba(0,0,0,.6);
+      margin: 32px;
+      padding: 16px;
+      transition: all .3s ease-in-out;
+      transform: translateY(-200%)
+    }
+    #help li {
+      margin-bottom: 16px;
+    }
+    #help-message {
+      color: rgba(255,255,255,.5);
+      position: absolute;
+      font-size: 12px;
+      top: 11px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 102;
     }
   </style>
   <div id="spells">
@@ -84,6 +110,17 @@
   <img id="splash" src="e5d77c42ed698cbb2ddc9b5283bb8261.png" alt="">
   <img id="gameover" src="4b45502b64828eca93e1908f45f1154c.png" alt="">
   <img id="win" src="6f28be4ba839ac0e9f12ae6d66f11e9c.png" alt="">
+  <div id="help">
+    <ul>
+      <li>arrow keys to move</li>
+      <li>bump into enemies to attack</li>
+      <li>press a number key to perform the corresponding special ability</li>
+      <li>the blue swirly takes you to the next level</li>
+      <li>exit level 8 to win!</li>
+      <li>press any key to dismiss this message</li>
+    </ul>
+  </div>
+  <div id="help-message">press ? for help at any time</div>
   <div class="data">
     <div>
       level
