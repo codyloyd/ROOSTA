@@ -33,7 +33,6 @@ const gameStates = machine(
         };
       },
       start: (detail, context) => {
-        console.log(context);
         game.level = 1;
         generateLevel();
         document.getElementById("splash").style.transform = "translateY(-100%)";
@@ -335,6 +334,9 @@ document.addEventListener("keydown", (e) => {
     gameStates("restart");
     return;
   }
+  if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", " "].includes(key)) {
+    e.preventDefault();
+  }
   if (currentGameState === "waitingForInput") {
     if (key === "Escape") {
       gameStates("resumePlaying");
@@ -349,9 +351,6 @@ document.addEventListener("keydown", (e) => {
     gameStates("help", { currentState: currentGameState });
   }
   if (!playerLock) {
-    if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(key)) {
-      e.preventDefault();
-    }
     roosta.keydown(key);
   }
   // if (key === "Escape") {
